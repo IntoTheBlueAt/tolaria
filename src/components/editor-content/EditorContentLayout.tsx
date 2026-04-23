@@ -5,6 +5,7 @@ import { ArchivedNoteBanner } from "../ArchivedNoteBanner";
 import { ConflictNoteBanner } from "../ConflictNoteBanner";
 import { RawEditorView } from "../RawEditorView";
 import { SingleEditorView } from "../SingleEditorView";
+import { ImageViewer } from "../ImageViewer";
 import { PdfViewer } from "../PdfViewer";
 import type { useEditorContentModel } from "./useEditorContentModel";
 
@@ -254,6 +255,7 @@ export function EditorContentLayout(model: EditorContentModel) {
     isDeletedPreview,
     rawLatestContentRef,
     rawModeContent,
+    isImage,
     isPdf,
   } = model;
 
@@ -304,6 +306,7 @@ export function EditorContentLayout(model: EditorContentModel) {
         onToggleDiff={onToggleDiff}
       />
       {isPdf && <PdfViewer path={path} />}
+      {isImage && <ImageViewer path={path} />}
       <RawModeEditorSection
         activeTab={activeTab}
         entries={entries}

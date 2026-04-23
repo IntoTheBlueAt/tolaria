@@ -9,6 +9,24 @@ import {
   markNoteOpenTrace,
 } from "../utils/noteOpenPerformance";
 
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".bmp",
+  ".tiff",
+]);
+
+function isBinaryPreviewablePath(path: string): boolean {
+  const lower = path.toLowerCase();
+  if (lower.endsWith(".pdf")) return true;
+  const dot = lower.lastIndexOf(".");
+  return dot !== -1 && IMAGE_EXTENSIONS.has(lower.slice(dot));
+}
+
 interface Tab {
   entry: VaultEntry;
   content: string;
@@ -303,13 +321,13 @@ async function navigateToEntry(options: {
     onMissingNotePath,
   } = options;
 
-  const isPdf =
-    entry.fileKind === "binary" && entry.path.toLowerCase().endsWith(".pdf");
-  if (entry.fileKind === "binary" && !isPdf) {
+  const isBinaryPreviewable =
+    entry.fileKind === "binary" && isBinaryPreviewablePath(entry.path);
+  if (entry.fileKind === "binary" && !isBinaryPreviewable) {
     failNoteOpenTrace(entry.path, "binary-entry");
     return;
   }
-  if (isPdf) {
+  if (isBinaryPreviewable) {
     syncActiveTabPath(activeTabPathRef, setActiveTabPath, entry.path);
     setSingleTab(tabsRef, setTabs, { entry, content: "" });
     finishNoteOpenTrace(entry.path);

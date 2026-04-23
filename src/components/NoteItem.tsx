@@ -20,6 +20,7 @@ import {
   StackSimple,
   File,
   FileDashed,
+  FileImage,
   FilePdf,
 } from "@phosphor-icons/react";
 import { getTypeColor, getTypeLightColor } from "../utils/typeColors";
@@ -28,6 +29,23 @@ import { relativeDate, getDisplayDate } from "../utils/noteListHelpers";
 import { NoteTitleIcon } from "./NoteTitleIcon";
 import { PropertyChips } from "./note-item/PropertyChips";
 import { ChangeNoteContent } from "./note-item/ChangeNoteContent";
+
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".bmp",
+  ".tiff",
+]);
+
+function isImagePath(path: string): boolean {
+  const lower = path.toLowerCase();
+  const dot = lower.lastIndexOf(".");
+  return dot !== -1 && IMAGE_EXTENSIONS.has(lower.slice(dot));
+}
 
 const TYPE_ICON_MAP: Record<
   string,
@@ -275,6 +293,7 @@ function resolveNoteTypeIcon(
 ): ComponentType<SVGAttributes<SVGSVGElement>> {
   if (entry.fileKind && entry.fileKind !== "markdown") {
     if (entry.path.toLowerCase().endsWith(".pdf")) return FilePdf;
+    if (isImagePath(entry.path)) return FileImage;
     return getFileKindIcon(entry.fileKind);
   }
   return getTypeIcon(entry.isA, customIcon);
@@ -592,9 +611,10 @@ export function NoteItem({
   onPrefetch,
   onContextMenu,
 }: NoteItemProps) {
-  const isPdf =
-    entry.fileKind === "binary" && entry.path.toLowerCase().endsWith(".pdf");
-  const isBinary = entry.fileKind === "binary" && !isPdf;
+  const isPreviewableBinary =
+    entry.fileKind === "binary" &&
+    (entry.path.toLowerCase().endsWith(".pdf") || isImagePath(entry.path));
+  const isBinary = entry.fileKind === "binary" && !isPreviewableBinary;
   const te = typeEntryMap[entry.isA ?? ""];
   const displayProps = resolveDisplayProps(
     entry,

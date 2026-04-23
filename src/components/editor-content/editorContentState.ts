@@ -2,6 +2,23 @@ import type { NoteStatus, VaultEntry } from "../../types";
 import { extractH1TitleFromContent } from "../../utils/noteTitle";
 import { countWords } from "../../utils/wikilinks";
 
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".bmp",
+  ".tiff",
+]);
+
+function isImageFilePath(path: string): boolean {
+  const lower = path.toLowerCase();
+  const dot = lower.lastIndexOf(".");
+  return dot !== -1 && IMAGE_EXTENSIONS.has(lower.slice(dot));
+}
+
 export interface EditorContentTab {
   entry: VaultEntry;
   content: string;
@@ -17,6 +34,7 @@ interface EditorContentStateInput {
 interface VisibilityState {
   effectiveRawMode: boolean;
   isDeletedPreview: boolean;
+  isImage: boolean;
   isNonMarkdownText: boolean;
   isPdf: boolean;
   showEditor: boolean;
@@ -42,6 +60,7 @@ export interface EditorContentState {
   isArchived: boolean;
   hasH1: boolean;
   isDeletedPreview: boolean;
+  isImage: boolean;
   isNonMarkdownText: boolean;
   isPdf: boolean;
   effectiveRawMode: boolean;
@@ -86,14 +105,18 @@ function deriveVisibilityState(input: {
   const isPdf =
     activeTab?.entry.fileKind === "binary" &&
     activeTab.entry.path.toLowerCase().endsWith(".pdf");
+  const isImage =
+    activeTab?.entry.fileKind === "binary" &&
+    isImageFilePath(activeTab.entry.path);
   const effectiveRawMode = rawMode || isNonMarkdownText;
 
   return {
     isDeletedPreview,
+    isImage,
     isNonMarkdownText,
     isPdf,
     effectiveRawMode,
-    showEditor: !effectiveRawMode && !isPdf,
+    showEditor: !effectiveRawMode && !isPdf && !isImage,
   };
 }
 
