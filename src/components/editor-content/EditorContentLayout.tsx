@@ -1,48 +1,58 @@
-import type React from 'react'
-import { DiffView } from '../DiffView'
-import { BreadcrumbBar } from '../BreadcrumbBar'
-import { ArchivedNoteBanner } from '../ArchivedNoteBanner'
-import { ConflictNoteBanner } from '../ConflictNoteBanner'
-import { RawEditorView } from '../RawEditorView'
-import { SingleEditorView } from '../SingleEditorView'
-import type { useEditorContentModel } from './useEditorContentModel'
+import type React from "react";
+import { DiffView } from "../DiffView";
+import { BreadcrumbBar } from "../BreadcrumbBar";
+import { ArchivedNoteBanner } from "../ArchivedNoteBanner";
+import { ConflictNoteBanner } from "../ConflictNoteBanner";
+import { RawEditorView } from "../RawEditorView";
+import { SingleEditorView } from "../SingleEditorView";
+import { PdfViewer } from "../PdfViewer";
+import type { useEditorContentModel } from "./useEditorContentModel";
 
-type EditorContentModel = ReturnType<typeof useEditorContentModel>
+type EditorContentModel = ReturnType<typeof useEditorContentModel>;
 
 type BreadcrumbActions = Pick<
   EditorContentModel,
-  | 'diffMode'
-  | 'diffLoading'
-  | 'onToggleDiff'
-  | 'effectiveRawMode'
-  | 'onToggleRaw'
-  | 'forceRawMode'
-  | 'showAIChat'
-  | 'onToggleAIChat'
-  | 'inspectorCollapsed'
-  | 'onToggleInspector'
-  | 'showDiffToggle'
-  | 'onToggleFavorite'
-  | 'onToggleOrganized'
-  | 'onDeleteNote'
-  | 'onArchiveNote'
-  | 'onUnarchiveNote'
-  | 'onRenameFilename'
->
+  | "diffMode"
+  | "diffLoading"
+  | "onToggleDiff"
+  | "effectiveRawMode"
+  | "onToggleRaw"
+  | "forceRawMode"
+  | "showAIChat"
+  | "onToggleAIChat"
+  | "inspectorCollapsed"
+  | "onToggleInspector"
+  | "showDiffToggle"
+  | "onToggleFavorite"
+  | "onToggleOrganized"
+  | "onDeleteNote"
+  | "onArchiveNote"
+  | "onUnarchiveNote"
+  | "onRenameFilename"
+>;
 
 function EditorLoadingSkeleton() {
   return (
-    <div className="flex flex-1 flex-col gap-3 p-8 animate-pulse" style={{ minHeight: 0 }}>
+    <div
+      className="flex flex-1 flex-col gap-3 p-8 animate-pulse"
+      style={{ minHeight: 0 }}
+    >
       <div className="h-6 w-2/5 rounded bg-muted" />
       <div className="h-4 w-4/5 rounded bg-muted" />
       <div className="h-4 w-3/5 rounded bg-muted" />
       <div className="h-4 w-4/5 rounded bg-muted" />
       <div className="h-4 w-2/5 rounded bg-muted" />
     </div>
-  )
+  );
 }
 
-function DiffModeView({ diffContent, onToggleDiff }: { diffContent: string | null; onToggleDiff: () => void }) {
+function DiffModeView({
+  diffContent,
+  onToggleDiff,
+}: {
+  diffContent: string | null;
+  onToggleDiff: () => void;
+}) {
   return (
     <div className="flex-1 overflow-auto">
       <button
@@ -53,9 +63,9 @@ function DiffModeView({ diffContent, onToggleDiff }: { diffContent: string | nul
         <span style={{ fontSize: 14, lineHeight: 1 }}>&larr;</span>
         Back to editor
       </button>
-      <DiffView diff={diffContent ?? ''} />
+      <DiffView diff={diffContent ?? ""} />
     </div>
-  )
+  );
 }
 
 function RawModeEditorSection({
@@ -69,11 +79,17 @@ function RawModeEditorSection({
   vaultPath,
 }: Pick<
   EditorContentModel,
-  'activeTab' | 'entries' | 'onRawContentChange' | 'onSave' | 'rawLatestContentRef' | 'rawModeContent' | 'vaultPath'
+  | "activeTab"
+  | "entries"
+  | "onRawContentChange"
+  | "onSave"
+  | "rawLatestContentRef"
+  | "rawModeContent"
+  | "vaultPath"
 > & {
-  rawMode: boolean
+  rawMode: boolean;
 }) {
-  if (!rawMode || !activeTab) return null
+  if (!rawMode || !activeTab) return null;
 
   return (
     <RawEditorView
@@ -86,11 +102,11 @@ function RawModeEditorSection({
       latestContentRef={rawLatestContentRef}
       vaultPath={vaultPath}
     />
-  )
+  );
 }
 
 function bindPath(cb: ((path: string) => void) | undefined, path: string) {
-  return cb ? () => cb(path) : undefined
+  return cb ? () => cb(path) : undefined;
 }
 
 function ActiveTabBreadcrumb({
@@ -100,11 +116,11 @@ function ActiveTabBreadcrumb({
   path,
   actions,
 }: {
-  activeTab: NonNullable<EditorContentModel['activeTab']>
-  barRef: React.RefObject<HTMLDivElement | null>
-  wordCount: number
-  path: string
-  actions: BreadcrumbActions
+  activeTab: NonNullable<EditorContentModel["activeTab"]>;
+  barRef: React.RefObject<HTMLDivElement | null>;
+  wordCount: number;
+  path: string;
+  actions: BreadcrumbActions;
 }) {
   return (
     <BreadcrumbBar
@@ -129,7 +145,7 @@ function ActiveTabBreadcrumb({
       onUnarchive={bindPath(actions.onUnarchiveNote, path)}
       onRenameFilename={actions.onRenameFilename}
     />
-  )
+  );
 }
 
 function EditorChrome({
@@ -144,7 +160,15 @@ function EditorChrome({
   onToggleDiff,
 }: Pick<
   EditorContentModel,
-  'isArchived' | 'onUnarchiveNote' | 'path' | 'isConflicted' | 'onKeepMine' | 'onKeepTheirs' | 'diffMode' | 'diffContent' | 'onToggleDiff'
+  | "isArchived"
+  | "onUnarchiveNote"
+  | "path"
+  | "isConflicted"
+  | "onKeepMine"
+  | "onKeepTheirs"
+  | "diffMode"
+  | "diffContent"
+  | "onToggleDiff"
 >) {
   return (
     <>
@@ -157,9 +181,11 @@ function EditorChrome({
           onKeepTheirs={() => onKeepTheirs?.(path)}
         />
       )}
-      {diffMode && <DiffModeView diffContent={diffContent} onToggleDiff={onToggleDiff} />}
+      {diffMode && (
+        <DiffModeView diffContent={diffContent} onToggleDiff={onToggleDiff} />
+      )}
     </>
-  )
+  );
 }
 
 function EditorCanvas({
@@ -173,16 +199,16 @@ function EditorCanvas({
   vaultPath,
 }: Pick<
   EditorContentModel,
-  | 'showEditor'
-  | 'cssVars'
-  | 'editor'
-  | 'entries'
-  | 'onNavigateWikilink'
-  | 'onEditorChange'
-  | 'isDeletedPreview'
-  | 'vaultPath'
+  | "showEditor"
+  | "cssVars"
+  | "editor"
+  | "entries"
+  | "onNavigateWikilink"
+  | "onEditorChange"
+  | "isDeletedPreview"
+  | "vaultPath"
 >) {
-  if (!showEditor) return null
+  if (!showEditor) return null;
 
   return (
     <div className="editor-scroll-area" style={cssVars as React.CSSProperties}>
@@ -197,7 +223,7 @@ function EditorCanvas({
         />
       </div>
     </div>
-  )
+  );
 }
 
 export function EditorContentLayout(model: EditorContentModel) {
@@ -228,14 +254,15 @@ export function EditorContentLayout(model: EditorContentModel) {
     isDeletedPreview,
     rawLatestContentRef,
     rawModeContent,
-  } = model
+    isPdf,
+  } = model;
 
   if (!activeTab) {
     return (
       <div className="flex flex-1 flex-col min-w-0 min-h-0">
         {isLoadingNewTab && showEditor && <EditorLoadingSkeleton />}
       </div>
-    )
+    );
   }
 
   return (
@@ -276,6 +303,7 @@ export function EditorContentLayout(model: EditorContentModel) {
         diffContent={diffContent}
         onToggleDiff={onToggleDiff}
       />
+      {isPdf && <PdfViewer path={path} />}
       <RawModeEditorSection
         activeTab={activeTab}
         entries={entries}
@@ -298,5 +326,5 @@ export function EditorContentLayout(model: EditorContentModel) {
       />
       {isLoadingNewTab && showEditor && <EditorLoadingSkeleton />}
     </div>
-  )
+  );
 }

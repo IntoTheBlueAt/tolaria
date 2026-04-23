@@ -1,19 +1,38 @@
-import type { ComponentType, CSSProperties, MouseEvent as ReactMouseEvent, MouseEventHandler, ReactNode, SVGAttributes } from 'react'
-import type { VaultEntry, NoteStatus } from '../types'
-import { cn } from '@/lib/utils'
+import type {
+  ComponentType,
+  CSSProperties,
+  MouseEvent as ReactMouseEvent,
+  MouseEventHandler,
+  ReactNode,
+  SVGAttributes,
+} from "react";
+import type { VaultEntry, NoteStatus } from "../types";
+import { cn } from "@/lib/utils";
 import {
-  Wrench, Flask, Target, ArrowsClockwise,
-  Users, CalendarBlank, Tag, FileText, StackSimple,
-  File, FileDashed,
-} from '@phosphor-icons/react'
-import { getTypeColor, getTypeLightColor } from '../utils/typeColors'
-import { resolveIcon } from '../utils/iconRegistry'
-import { relativeDate, getDisplayDate } from '../utils/noteListHelpers'
-import { NoteTitleIcon } from './NoteTitleIcon'
-import { PropertyChips } from './note-item/PropertyChips'
-import { ChangeNoteContent } from './note-item/ChangeNoteContent'
+  Wrench,
+  Flask,
+  Target,
+  ArrowsClockwise,
+  Users,
+  CalendarBlank,
+  Tag,
+  FileText,
+  StackSimple,
+  File,
+  FileDashed,
+  FilePdf,
+} from "@phosphor-icons/react";
+import { getTypeColor, getTypeLightColor } from "../utils/typeColors";
+import { resolveIcon } from "../utils/iconRegistry";
+import { relativeDate, getDisplayDate } from "../utils/noteListHelpers";
+import { NoteTitleIcon } from "./NoteTitleIcon";
+import { PropertyChips } from "./note-item/PropertyChips";
+import { ChangeNoteContent } from "./note-item/ChangeNoteContent";
 
-const TYPE_ICON_MAP: Record<string, ComponentType<SVGAttributes<SVGSVGElement>>> = {
+const TYPE_ICON_MAP: Record<
+  string,
+  ComponentType<SVGAttributes<SVGSVGElement>>
+> = {
   Project: Wrench,
   Experiment: Flask,
   Responsibility: Target,
@@ -22,107 +41,168 @@ const TYPE_ICON_MAP: Record<string, ComponentType<SVGAttributes<SVGSVGElement>>>
   Event: CalendarBlank,
   Topic: Tag,
   Type: StackSimple,
-}
+};
 
 // eslint-disable-next-line react-refresh/only-export-components -- utility co-located with component
-export function getTypeIcon(isA: string | null, customIcon?: string | null): ComponentType<SVGAttributes<SVGSVGElement>> {
-  if (customIcon) return resolveIcon(customIcon)
-  return (isA && TYPE_ICON_MAP[isA]) || FileText
+export function getTypeIcon(
+  isA: string | null,
+  customIcon?: string | null,
+): ComponentType<SVGAttributes<SVGSVGElement>> {
+  if (customIcon) return resolveIcon(customIcon);
+  return (isA && TYPE_ICON_MAP[isA]) || FileText;
 }
 
-const NOTE_STATUS_DOT: Record<string, { color: string; testId: string; title: string }> = {
-  pendingSave: { color: 'var(--accent-green)', testId: 'pending-save-indicator', title: 'Saving to disk…' },
-  new: { color: 'var(--accent-green)', testId: 'new-indicator', title: 'New (uncommitted)' },
-  modified: { color: 'var(--accent-orange)', testId: 'modified-indicator', title: 'Modified (uncommitted)' },
-}
+const NOTE_STATUS_DOT: Record<
+  string,
+  { color: string; testId: string; title: string }
+> = {
+  pendingSave: {
+    color: "var(--accent-green)",
+    testId: "pending-save-indicator",
+    title: "Saving to disk…",
+  },
+  new: {
+    color: "var(--accent-green)",
+    testId: "new-indicator",
+    title: "New (uncommitted)",
+  },
+  modified: {
+    color: "var(--accent-orange)",
+    testId: "modified-indicator",
+    title: "Modified (uncommitted)",
+  },
+};
 
 function StatusDot({ noteStatus }: { noteStatus: NoteStatus }) {
-  const dot = NOTE_STATUS_DOT[noteStatus]
-  if (!dot) return null
+  const dot = NOTE_STATUS_DOT[noteStatus];
+  if (!dot) return null;
   return (
     <span
-      className={`mr-1.5 inline-block align-middle${noteStatus === 'pendingSave' ? ' tab-status-pulse' : ''}`}
-      style={{ width: 6, height: 6, borderRadius: '50%', background: dot.color, verticalAlign: 'middle' }}
+      className={`mr-1.5 inline-block align-middle${noteStatus === "pendingSave" ? " tab-status-pulse" : ""}`}
+      style={{
+        width: 6,
+        height: 6,
+        borderRadius: "50%",
+        background: dot.color,
+        verticalAlign: "middle",
+      }}
       data-testid={dot.testId}
       title={dot.title}
     />
-  )
+  );
 }
 
 function StateBadge({ archived }: { archived: boolean }) {
   if (archived) {
     return (
-      <span className="ml-1.5 inline-block align-middle text-muted-foreground" style={{ fontSize: 9, fontWeight: 500, background: 'var(--muted)', borderRadius: 4, padding: '1px 4px', verticalAlign: 'middle' }}>
+      <span
+        className="ml-1.5 inline-block align-middle text-muted-foreground"
+        style={{
+          fontSize: 9,
+          fontWeight: 500,
+          background: "var(--muted)",
+          borderRadius: 4,
+          padding: "1px 4px",
+          verticalAlign: "middle",
+        }}
+      >
         ARCHIVED
       </span>
-    )
+    );
   }
-  return null
+  return null;
 }
 
 type NoteItemVisualState = {
-  isBinary: boolean
-  isSelected: boolean
-  isMultiSelected: boolean
-  isHighlighted: boolean
-}
+  isBinary: boolean;
+  isSelected: boolean;
+  isMultiSelected: boolean;
+  isHighlighted: boolean;
+};
 
-type NoteItemRowState = 'binary' | 'multiSelected' | 'selected' | 'highlighted' | 'default'
+type NoteItemRowState =
+  | "binary"
+  | "multiSelected"
+  | "selected"
+  | "highlighted"
+  | "default";
 
 type NoteItemSurfaceProps = {
-  className: string
-  style: CSSProperties
-  onClick: MouseEventHandler<HTMLDivElement>
-  onContextMenu?: MouseEventHandler<HTMLDivElement>
-  onMouseEnter?: () => void
-  title?: string
-  testId?: string
-}
+  className: string;
+  style: CSSProperties;
+  onClick: MouseEventHandler<HTMLDivElement>;
+  onContextMenu?: MouseEventHandler<HTMLDivElement>;
+  onMouseEnter?: () => void;
+  title?: string;
+  testId?: string;
+};
 
-const NOTE_ITEM_BASE_CLASS_NAME = 'relative border-b border-[var(--border)] transition-colors'
-const BINARY_NOTE_STYLE: CSSProperties = { padding: '14px 16px' }
+const NOTE_ITEM_BASE_CLASS_NAME =
+  "relative border-b border-[var(--border)] transition-colors";
+const BINARY_NOTE_STYLE: CSSProperties = { padding: "14px 16px" };
 const NOTE_ITEM_ROW_CLASS_NAMES: Record<NoteItemRowState, string> = {
-  binary: 'cursor-default opacity-50',
-  multiSelected: 'cursor-pointer',
-  selected: 'cursor-pointer border-l-[3px]',
-  highlighted: 'cursor-pointer bg-muted hover:bg-muted',
-  default: 'cursor-pointer hover:bg-muted',
-}
+  binary: "cursor-default opacity-50",
+  multiSelected: "cursor-pointer",
+  selected: "cursor-pointer border-l-[3px]",
+  highlighted: "cursor-pointer bg-muted hover:bg-muted",
+  default: "cursor-pointer hover:bg-muted",
+};
 
-function resolveNoteItemRowState({ isBinary, isSelected, isMultiSelected, isHighlighted }: NoteItemVisualState): NoteItemRowState {
-  if (isBinary) return 'binary'
-  if (isMultiSelected) return 'multiSelected'
-  if (isSelected) return 'selected'
-  if (isHighlighted) return 'highlighted'
-  return 'default'
+function resolveNoteItemRowState({
+  isBinary,
+  isSelected,
+  isMultiSelected,
+  isHighlighted,
+}: NoteItemVisualState): NoteItemRowState {
+  if (isBinary) return "binary";
+  if (isMultiSelected) return "multiSelected";
+  if (isSelected) return "selected";
+  if (isHighlighted) return "highlighted";
+  return "default";
 }
 
 function noteItemClassName(state: NoteItemVisualState) {
-  return cn(NOTE_ITEM_BASE_CLASS_NAME, NOTE_ITEM_ROW_CLASS_NAMES[resolveNoteItemRowState(state)])
+  return cn(
+    NOTE_ITEM_BASE_CLASS_NAME,
+    NOTE_ITEM_ROW_CLASS_NAMES[resolveNoteItemRowState(state)],
+  );
 }
 
 function NoteTypeIndicator({
   TypeIcon,
   typeColor,
 }: {
-  TypeIcon: ComponentType<SVGAttributes<SVGSVGElement>>
-  typeColor: string
+  TypeIcon: ComponentType<SVGAttributes<SVGSVGElement>>;
+  typeColor: string;
 }) {
-  return <TypeIcon width={14} height={14} className="absolute right-3 top-2.5" style={{ color: typeColor }} data-testid="type-icon" />
+  return (
+    <TypeIcon
+      width={14}
+      height={14}
+      className="absolute right-3 top-2.5"
+      style={{ color: typeColor }}
+      data-testid="type-icon"
+    />
+  );
 }
 
 function NoteSnippet({ snippet }: { snippet?: string | null }) {
-  if (!snippet) return null
+  if (!snippet) return null;
 
   return (
     <div
       className="text-[12px] leading-[1.5] text-muted-foreground"
       data-testid="note-snippet"
-      style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+      style={{
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+      }}
     >
       {snippet}
     </div>
-  )
+  );
 }
 
 function NotePropertySection({
@@ -132,13 +212,13 @@ function NotePropertySection({
   typeEntryMap,
   onClickNote,
 }: {
-  entry: VaultEntry
-  displayProps: string[]
-  allEntries: VaultEntry[]
-  typeEntryMap: Record<string, VaultEntry>
-  onClickNote: NoteItemProps['onClickNote']
+  entry: VaultEntry;
+  displayProps: string[];
+  allEntries: VaultEntry[];
+  typeEntryMap: Record<string, VaultEntry>;
+  onClickNote: NoteItemProps["onClickNote"];
 }) {
-  if (displayProps.length === 0) return null
+  if (displayProps.length === 0) return null;
 
   return (
     <PropertyChips
@@ -148,7 +228,7 @@ function NotePropertySection({
       typeEntryMap={typeEntryMap}
       onOpenNote={onClickNote}
     />
-  )
+  );
 }
 
 function InteractiveNoteDetails({
@@ -160,13 +240,13 @@ function InteractiveNoteDetails({
   typeEntryMap,
   onClickNote,
 }: {
-  entry: VaultEntry
-  noteStatus: NoteStatus
-  isSelected: boolean
-  displayProps: string[]
-  allEntries: VaultEntry[]
-  typeEntryMap: Record<string, VaultEntry>
-  onClickNote: NoteItemProps['onClickNote']
+  entry: VaultEntry;
+  noteStatus: NoteStatus;
+  isSelected: boolean;
+  displayProps: string[];
+  allEntries: VaultEntry[];
+  typeEntryMap: Record<string, VaultEntry>;
+  onClickNote: NoteItemProps["onClickNote"];
 }) {
   return (
     <>
@@ -186,12 +266,18 @@ function InteractiveNoteDetails({
       />
       <NoteDateRow entry={entry} />
     </>
-  )
+  );
 }
 
-function resolveNoteTypeIcon(entry: VaultEntry, customIcon?: string | null): ComponentType<SVGAttributes<SVGSVGElement>> {
-  if (entry.fileKind && entry.fileKind !== 'markdown') return getFileKindIcon(entry.fileKind)
-  return getTypeIcon(entry.isA, customIcon)
+function resolveNoteTypeIcon(
+  entry: VaultEntry,
+  customIcon?: string | null,
+): ComponentType<SVGAttributes<SVGSVGElement>> {
+  if (entry.fileKind && entry.fileKind !== "markdown") {
+    if (entry.path.toLowerCase().endsWith(".pdf")) return FilePdf;
+    return getFileKindIcon(entry.fileKind);
+  }
+  return getTypeIcon(entry.isA, customIcon);
 }
 
 function StandardNoteContent({
@@ -205,18 +291,18 @@ function StandardNoteContent({
   typeEntryMap,
   onClickNote,
 }: {
-  entry: VaultEntry
-  isBinary: boolean
-  noteStatus: NoteStatus
-  isSelected: boolean
-  typeColor: string
-  displayProps: string[]
-  allEntries: VaultEntry[]
-  typeEntryMap: Record<string, VaultEntry>
-  onClickNote: NoteItemProps['onClickNote']
+  entry: VaultEntry;
+  isBinary: boolean;
+  noteStatus: NoteStatus;
+  isSelected: boolean;
+  typeColor: string;
+  displayProps: string[];
+  allEntries: VaultEntry[];
+  typeEntryMap: Record<string, VaultEntry>;
+  onClickNote: NoteItemProps["onClickNote"];
 }) {
-  const te = typeEntryMap[entry.isA ?? '']
-  const TypeIcon = resolveNoteTypeIcon(entry, te?.icon)
+  const te = typeEntryMap[entry.isA ?? ""];
+  const TypeIcon = resolveNoteTypeIcon(entry, te?.icon);
 
   return (
     <>
@@ -242,7 +328,7 @@ function StandardNoteContent({
         )}
       </div>
     </>
-  )
+  );
 }
 
 function NoteTitleRow({
@@ -251,81 +337,121 @@ function NoteTitleRow({
   isSelected,
   noteStatus,
 }: {
-  entry: VaultEntry
-  isBinary: boolean
-  isSelected: boolean
-  noteStatus: NoteStatus
+  entry: VaultEntry;
+  isBinary: boolean;
+  isSelected: boolean;
+  noteStatus: NoteStatus;
 }) {
   return (
-    <div className={cn('truncate pr-5 text-[13px]', isBinary ? 'text-muted-foreground' : 'text-foreground', isSelected && !isBinary ? 'font-semibold' : 'font-medium')}>
-      {noteStatus !== 'clean' && !isBinary && <StatusDot noteStatus={noteStatus} />}
-      <NoteTitleIcon icon={entry.icon} size={15} className="mr-1" testId="note-title-icon" />
+    <div
+      className={cn(
+        "truncate pr-5 text-[13px]",
+        isBinary ? "text-muted-foreground" : "text-foreground",
+        isSelected && !isBinary ? "font-semibold" : "font-medium",
+      )}
+    >
+      {noteStatus !== "clean" && !isBinary && (
+        <StatusDot noteStatus={noteStatus} />
+      )}
+      <NoteTitleIcon
+        icon={entry.icon}
+        size={15}
+        className="mr-1"
+        testId="note-title-icon"
+      />
       {entry.title}
       {!isBinary && <StateBadge archived={entry.archived} />}
     </div>
-  )
+  );
 }
 
 function NoteDateRow({ entry }: { entry: VaultEntry }) {
-  const modifiedLabel = relativeDate(getDisplayDate(entry))
-  const createdLabel = entry.createdAt ? `Created ${relativeDate(entry.createdAt)}` : null
+  const modifiedLabel = relativeDate(getDisplayDate(entry));
+  const createdLabel = entry.createdAt
+    ? `Created ${relativeDate(entry.createdAt)}`
+    : null;
 
-  if (!modifiedLabel && !createdLabel) return null
+  if (!modifiedLabel && !createdLabel) return null;
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-[10px] text-muted-foreground" data-testid="note-date-row">
+    <div
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-[10px] text-muted-foreground"
+      data-testid="note-date-row"
+    >
       <span>{modifiedLabel}</span>
-      {createdLabel && <span className="justify-self-end text-right">{createdLabel}</span>}
+      {createdLabel && (
+        <span className="justify-self-end text-right">{createdLabel}</span>
+      )}
     </div>
-  )
+  );
 }
 
-function noteItemStyle(isSelected: boolean, isMultiSelected: boolean, typeColor: string, typeLightColor: string): CSSProperties {
-  const base: CSSProperties = { padding: isSelected && !isMultiSelected ? '14px 16px 14px 13px' : '14px 16px' }
-  if (isMultiSelected) base.backgroundColor = 'color-mix(in srgb, var(--accent-blue) 10%, transparent)'
-  else if (isSelected) { base.borderLeftColor = typeColor; base.backgroundColor = typeLightColor }
-  return base
+function noteItemStyle(
+  isSelected: boolean,
+  isMultiSelected: boolean,
+  typeColor: string,
+  typeLightColor: string,
+): CSSProperties {
+  const base: CSSProperties = {
+    padding:
+      isSelected && !isMultiSelected ? "14px 16px 14px 13px" : "14px 16px",
+  };
+  if (isMultiSelected)
+    base.backgroundColor =
+      "color-mix(in srgb, var(--accent-blue) 10%, transparent)";
+  else if (isSelected) {
+    base.borderLeftColor = typeColor;
+    base.backgroundColor = typeLightColor;
+  }
+  return base;
 }
 
-function getFileKindIcon(fileKind: string | undefined): ComponentType<SVGAttributes<SVGSVGElement>> {
-  if (fileKind === 'text') return File
-  if (fileKind === 'binary') return FileDashed
-  return FileText
+function getFileKindIcon(
+  fileKind: string | undefined,
+): ComponentType<SVGAttributes<SVGSVGElement>> {
+  if (fileKind === "text") return File;
+  if (fileKind === "binary") return FileDashed;
+  return FileText;
 }
 
-function resolveDisplayProps(entry: VaultEntry, typeEntryMap: Record<string, VaultEntry>, displayPropsOverride?: string[] | null): string[] {
-  if (displayPropsOverride && displayPropsOverride.length > 0) return displayPropsOverride
-  return typeEntryMap[entry.isA ?? '']?.listPropertiesDisplay ?? []
+function resolveDisplayProps(
+  entry: VaultEntry,
+  typeEntryMap: Record<string, VaultEntry>,
+  displayPropsOverride?: string[] | null,
+): string[] {
+  if (displayPropsOverride && displayPropsOverride.length > 0)
+    return displayPropsOverride;
+  return typeEntryMap[entry.isA ?? ""]?.listPropertiesDisplay ?? [];
 }
 
 type NoteItemProps = {
-  entry: VaultEntry
-  isSelected: boolean
-  isMultiSelected?: boolean
-  isHighlighted?: boolean
-  noteStatus?: NoteStatus
+  entry: VaultEntry;
+  isSelected: boolean;
+  isMultiSelected?: boolean;
+  isHighlighted?: boolean;
+  noteStatus?: NoteStatus;
   /** When set, renders in Changes-view style: filename + change type icon */
-  changeStatus?: 'modified' | 'added' | 'deleted' | 'untracked' | 'renamed'
-  typeEntryMap: Record<string, VaultEntry>
-  allEntries?: VaultEntry[]
-  displayPropsOverride?: string[] | null
-  onClickNote: (entry: VaultEntry, e: ReactMouseEvent) => void
-  onPrefetch?: (path: string) => void
-  onContextMenu?: (entry: VaultEntry, e: ReactMouseEvent) => void
-}
+  changeStatus?: "modified" | "added" | "deleted" | "untracked" | "renamed";
+  typeEntryMap: Record<string, VaultEntry>;
+  allEntries?: VaultEntry[];
+  displayPropsOverride?: string[] | null;
+  onClickNote: (entry: VaultEntry, e: ReactMouseEvent) => void;
+  onPrefetch?: (path: string) => void;
+  onContextMenu?: (entry: VaultEntry, e: ReactMouseEvent) => void;
+};
 
 function createNoteItemClickHandler(
   entry: VaultEntry,
   isBinary: boolean,
-  onClickNote: NoteItemProps['onClickNote'],
+  onClickNote: NoteItemProps["onClickNote"],
 ) {
   if (isBinary) {
     return (event: ReactMouseEvent) => {
-      event.preventDefault()
-      event.stopPropagation()
-    }
+      event.preventDefault();
+      event.stopPropagation();
+    };
   }
-  return (event: ReactMouseEvent) => onClickNote(entry, event)
+  return (event: ReactMouseEvent) => onClickNote(entry, event);
 }
 
 function resolveNoteItemSurfaceProps({
@@ -340,22 +466,36 @@ function resolveNoteItemSurfaceProps({
   typeColor,
   typeLightColor,
 }: NoteItemVisualState & {
-  entry: VaultEntry
-  onClickNote: NoteItemProps['onClickNote']
-  onPrefetch?: NoteItemProps['onPrefetch']
-  onContextMenu?: NoteItemProps['onContextMenu']
-  typeColor: string
-  typeLightColor: string
+  entry: VaultEntry;
+  onClickNote: NoteItemProps["onClickNote"];
+  onPrefetch?: NoteItemProps["onPrefetch"];
+  onContextMenu?: NoteItemProps["onContextMenu"];
+  typeColor: string;
+  typeLightColor: string;
 }): NoteItemSurfaceProps {
   return {
-    className: noteItemClassName({ isBinary, isSelected, isMultiSelected, isHighlighted }),
-    style: isBinary ? BINARY_NOTE_STYLE : noteItemStyle(isSelected, isMultiSelected, typeColor, typeLightColor),
+    className: noteItemClassName({
+      isBinary,
+      isSelected,
+      isMultiSelected,
+      isHighlighted,
+    }),
+    style: isBinary
+      ? BINARY_NOTE_STYLE
+      : noteItemStyle(isSelected, isMultiSelected, typeColor, typeLightColor),
     onClick: createNoteItemClickHandler(entry, isBinary, onClickNote),
-    onContextMenu: onContextMenu ? (event) => onContextMenu(entry, event) : undefined,
-    onMouseEnter: !isBinary && onPrefetch ? () => onPrefetch(entry.path) : undefined,
-    testId: isMultiSelected ? 'multi-selected-item' : isBinary ? 'binary-file-item' : undefined,
-    title: isBinary ? 'Cannot open this file type' : undefined,
-  }
+    onContextMenu: onContextMenu
+      ? (event) => onContextMenu(entry, event)
+      : undefined,
+    onMouseEnter:
+      !isBinary && onPrefetch ? () => onPrefetch(entry.path) : undefined,
+    testId: isMultiSelected
+      ? "multi-selected-item"
+      : isBinary
+        ? "binary-file-item"
+        : undefined,
+    title: isBinary ? "Cannot open this file type" : undefined,
+  };
 }
 
 function NoteItemRow({
@@ -365,11 +505,11 @@ function NoteItemRow({
   changeStatus,
   children,
 }: {
-  surfaceProps: NoteItemSurfaceProps
-  entryPath: string
-  isHighlighted: boolean
-  changeStatus: NoteItemProps['changeStatus']
-  children: ReactNode
+  surfaceProps: NoteItemSurfaceProps;
+  entryPath: string;
+  isHighlighted: boolean;
+  changeStatus: NoteItemProps["changeStatus"];
+  children: ReactNode;
 }) {
   return (
     <div
@@ -386,7 +526,7 @@ function NoteItemRow({
     >
       {children}
     </div>
-  )
+  );
 }
 
 function NoteItemContent({
@@ -401,16 +541,16 @@ function NoteItemContent({
   typeEntryMap,
   onClickNote,
 }: {
-  entry: VaultEntry
-  isBinary: boolean
-  isSelected: boolean
-  noteStatus: NoteStatus
-  changeStatus?: NoteItemProps['changeStatus']
-  typeColor: string
-  displayProps: string[]
-  allEntries: VaultEntry[]
-  typeEntryMap: Record<string, VaultEntry>
-  onClickNote: NoteItemProps['onClickNote']
+  entry: VaultEntry;
+  isBinary: boolean;
+  isSelected: boolean;
+  noteStatus: NoteStatus;
+  changeStatus?: NoteItemProps["changeStatus"];
+  typeColor: string;
+  displayProps: string[];
+  allEntries: VaultEntry[];
+  typeEntryMap: Record<string, VaultEntry>;
+  onClickNote: NoteItemProps["onClickNote"];
 }) {
   if (changeStatus) {
     return (
@@ -418,9 +558,9 @@ function NoteItemContent({
         entry={entry}
         changeStatus={changeStatus}
         isSelected={isSelected}
-        isDeletedChange={changeStatus === 'deleted'}
+        isDeletedChange={changeStatus === "deleted"}
       />
-    )
+    );
   }
 
   return (
@@ -435,15 +575,36 @@ function NoteItemContent({
       typeEntryMap={typeEntryMap}
       onClickNote={onClickNote}
     />
-  )
+  );
 }
 
-export function NoteItem({ entry, isSelected, isMultiSelected = false, isHighlighted = false, noteStatus = 'clean', changeStatus, typeEntryMap, allEntries, displayPropsOverride, onClickNote, onPrefetch, onContextMenu }: NoteItemProps) {
-  const isBinary = entry.fileKind === 'binary'
-  const te = typeEntryMap[entry.isA ?? '']
-  const displayProps = resolveDisplayProps(entry, typeEntryMap, displayPropsOverride)
-  const typeColor = isBinary ? 'var(--muted-foreground)' : getTypeColor(entry.isA ?? 'Note', te?.color)
-  const typeLightColor = getTypeLightColor(entry.isA ?? 'Note', te?.color)
+export function NoteItem({
+  entry,
+  isSelected,
+  isMultiSelected = false,
+  isHighlighted = false,
+  noteStatus = "clean",
+  changeStatus,
+  typeEntryMap,
+  allEntries,
+  displayPropsOverride,
+  onClickNote,
+  onPrefetch,
+  onContextMenu,
+}: NoteItemProps) {
+  const isPdf =
+    entry.fileKind === "binary" && entry.path.toLowerCase().endsWith(".pdf");
+  const isBinary = entry.fileKind === "binary" && !isPdf;
+  const te = typeEntryMap[entry.isA ?? ""];
+  const displayProps = resolveDisplayProps(
+    entry,
+    typeEntryMap,
+    displayPropsOverride,
+  );
+  const typeColor = isBinary
+    ? "var(--muted-foreground)"
+    : getTypeColor(entry.isA ?? "Note", te?.color);
+  const typeLightColor = getTypeLightColor(entry.isA ?? "Note", te?.color);
   const surfaceProps = resolveNoteItemSurfaceProps({
     entry,
     isBinary,
@@ -455,7 +616,7 @@ export function NoteItem({ entry, isSelected, isMultiSelected = false, isHighlig
     onContextMenu,
     typeColor,
     typeLightColor,
-  })
+  });
 
   return (
     <NoteItemRow
@@ -477,5 +638,5 @@ export function NoteItem({ entry, isSelected, isMultiSelected = false, isHighlig
         onClickNote={onClickNote}
       />
     </NoteItemRow>
-  )
+  );
 }
